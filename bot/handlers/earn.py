@@ -27,10 +27,14 @@ router = Router(name="earn")
 async def on_watch_button(message: Message) -> None:
     from ..config import settings as _s
 
+    if _s.ad_cooldown_seconds > 0:
+        cooldown_line = f"Cooldown antar iklan: {_s.ad_cooldown_seconds} detik\n\n"
+    else:
+        cooldown_line = "Tonton sebanyak yang kamu mau, langsung lanjut.\n\n"
     await message.answer(
         "🎬 <b>Tonton Iklan</b>\n\n"
         f"Setiap iklan = <b>{texts.fmt_rp(_s.earn_per_ad)}</b>\n"
-        f"Cooldown antar iklan: {_s.ad_cooldown_seconds} detik\n\n"
+        f"{cooldown_line}"
         "Klik tombol di bawah untuk mulai:",
         reply_markup=keyboards.watch_button(),
     )
