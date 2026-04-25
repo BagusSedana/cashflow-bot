@@ -1,7 +1,13 @@
-"""App configuration loaded from environment variables."""
+"""App configuration loaded from environment variables.
+
+Note: list-style env vars (`ADMIN_IDS`, `PAYOUT_METHODS`) are stored as raw
+comma-separated strings on this Settings model and exposed as parsed lists via
+`@property`. This avoids pydantic-settings' default JSON-decoding behavior on
+list-typed fields, which would reject simple values like ``DANA,GoPay,OVO``.
+"""
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +21,7 @@ class Settings(BaseSettings):
 
     # Telegram
     telegram_bot_token: str = Field(..., alias="TELEGRAM_BOT_TOKEN")
-    admin_ids: list[int] = Field(default_factory=list, alias="ADMIN_IDS")
+    admin_ids_raw: str = Field(default="", alias="ADMIN_IDS")
     proof_channel_username: str = Field(default="", alias="PROOF_CHANNEL_USERNAME")
 
     # App
@@ -33,36 +39,20 @@ class Settings(BaseSettings):
     # Withdraw
     min_withdraw: int = Field(default=5_000, alias="MIN_WITHDRAW")
     max_withdraw: int = Field(default=500_000, alias="MAX_WITHDRAW")
-    payout_methods: list[str] = Field(
-        default_factory=lambda: ["DANA", "GoPay", "OVO", "BANK"],
-        alias="PAYOUT_METHODS",
+    payout_methods_raw: str = Field(
+        default="DANA,GoPay,OVO,BANK", alias="PAYOUT_METHODS"
     )
 
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    @field_validator("admin_ids", mode="before")
-    @classmethod
-    def _parse_admin_ids(cls, value: object) -> list[int]:
-        if value in (None, "", []):
-            return []
-        if isinstance(value, int):
-            return [value]
-        if isinstance(value, list):
-            return [int(v) for v in value if str(v).strip()]
-        if isinstance(value, str):
-            return [int(v.strip()) for v in value.split(",") if v.strip()]
-        raise TypeError(f"Unsupported admin_ids value: {value!r}")
+    @property
+    def admin_ids(self) -> list[int]:
+        return [int(v.strip()) for v in self.admin_ids_raw.split(",") if v.strip()]
 
-    @field_validator("payout_methods", mode="before")
-    @classmethod
-    def _parse_payout_methods(cls, value: object) -> list[str]:
-        if value in (None, "", []):
-            return ["DANA", "GoPay", "OVO", "BANK"]
-        if isinstance(value, list):
-            return [str(v).strip() for v in value if str(v).strip()]
-        if isinstance(value, str):
-            return [v.strip() for v in value.split(",") if v.strip()]
-        raise TypeError(f"Unsupported payout_methods value: {value!r}")
+    @property
+    def payout_methods(self) -> list[str]:
+        items = [v.strip() for v in self.payout_methods_raw.split(",") if v.strip()]
+        return items or ["DANA", "GoPay", "OVO", "BANK"]
 
 
 settings = Settings()  # type: ignore[call-arg]
