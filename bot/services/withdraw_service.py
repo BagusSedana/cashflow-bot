@@ -108,3 +108,23 @@ async def list_pending(session: AsyncSession, limit: int = 20) -> list[WithdrawR
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+async def seconds_since_last_request(
+    session: AsyncSession, user_id: int
+) -> int | None:
+    """Return seconds since the user's most recent non-rejected withdraw request.
+
+    Returns None when the user has no prior withdraw request.
+    """
+    result = await session.execute(
+        select(WithdrawRequest.created_at)
+        .where(WithdrawRequest.user_id == user_id)
+        .where(WithdrawRequest.status != WithdrawStatus.REJECTED.value)
+        .order_by(WithdrawRequest.created_at.desc())
+        .limit(1)
+    )
+    last = result.scalar_one_or_none()
+    if last is None:
+        return None
+    return int((datetime.utcnow() - last).total_seconds())

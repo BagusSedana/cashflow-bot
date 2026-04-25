@@ -1,12 +1,17 @@
-"""Main menu handlers: balance, referral, help, proof."""
+"""Main menu handlers: balance, referral, help, proof, daily check-in."""
 from __future__ import annotations
 
+import random
+from datetime import datetime
+
 from aiogram import Bot, F, Router
+from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
 from .. import keyboards, texts
 from ..config import settings
-from ..db import SessionLocal
+from ..db import EarnSource, SessionLocal
+from ..services.earning_service import add_earning, can_claim_daily
 from ..services.user_service import get_user_by_telegram_id, referral_stats
 
 router = Router(name="menu")
@@ -87,4 +92,50 @@ async def on_tasks(message: Message) -> None:
         "Fitur ini sedang dalam pengembangan dan akan segera tersedia.\n"
         "Sementara, kamu bisa earn lewat menu Tonton Iklan atau ajak teman.",
         reply_markup=keyboards.main_menu(),
+    )
+
+
+@router.message(Command("daily"))
+@router.message(F.text == texts.MENU_BUTTON_DAILY)
+async def on_daily(message: Message) -> None:
+    if message.from_user is None:
+        return
+    async with SessionLocal() as session:
+        user = await get_user_by_telegram_id(session, message.from_user.id)
+        if user is None:
+            await message.answer("Ketik /start dulu.")
+            return
+        if not can_claim_daily(user):
+            await message.answer(
+                "🎁 <b>Bonus Harian</b>\n\n"
+                "Kamu sudah klaim hari ini. Datang lagi besok ya 👋"
+            )
+            return
+
+        lo = max(0, settings.daily_bonus_min)
+        hi = max(lo, settings.daily_bonus_max)
+        amount = random.randint(lo, hi) if hi >= lo else 0
+        if amount <= 0:
+            await message.answer(
+                "Bonus harian sedang dinonaktifkan oleh admin (DAILY_BONUS_MAX=0)."
+            )
+            return
+
+        user.last_daily_at = datetime.utcnow()
+        await add_earning(
+            session,
+            user,
+            amount,
+            EarnSource.DAILY,
+            note="daily check-in",
+            pay_referral=False,
+        )
+        balance = user.balance
+        await session.commit()
+
+    await message.answer(
+        f"🎁 <b>Bonus Harian</b>\n\n"
+        f"Kamu dapat <b>{texts.fmt_rp(amount)}</b>! 🎉\n"
+        f"Saldo sekarang: <b>{texts.fmt_rp(balance)}</b>\n\n"
+        f"Datang lagi besok ya, bonus reset tiap 20 jam."
     )

@@ -6,6 +6,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
+    WebAppInfo,
 )
 
 from . import texts
@@ -16,7 +17,7 @@ def main_menu() -> ReplyKeyboardMarkup:
     rows = [
         [
             KeyboardButton(text=texts.MENU_BUTTON_EARN),
-            KeyboardButton(text=texts.MENU_BUTTON_TASKS),
+            KeyboardButton(text=texts.MENU_BUTTON_DAILY),
         ],
         [
             KeyboardButton(text=texts.MENU_BUTTON_BALANCE),
@@ -24,24 +25,47 @@ def main_menu() -> ReplyKeyboardMarkup:
         ],
         [
             KeyboardButton(text=texts.MENU_BUTTON_WITHDRAW),
+            KeyboardButton(text=texts.MENU_BUTTON_TASKS),
+        ],
+        [
             KeyboardButton(text=texts.MENU_BUTTON_HELP),
         ],
     ]
     if settings.proof_channel_username:
-        rows.append([KeyboardButton(text=texts.MENU_BUTTON_PROOF)])
+        rows[-1].append(KeyboardButton(text=texts.MENU_BUTTON_PROOF))
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
 def watch_again() -> InlineKeyboardMarkup:
+    if settings.webapp_url:
+        first_row = [
+            InlineKeyboardButton(
+                text="🎬 Tonton Lagi", web_app=WebAppInfo(url=settings.webapp_url)
+            )
+        ]
+    else:
+        first_row = [InlineKeyboardButton(text="🎬 Tonton Lagi", callback_data="watch_ad")]
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🎬 Tonton Lagi", callback_data="watch_ad")],
+            first_row,
             [InlineKeyboardButton(text="💰 Lihat Saldo", callback_data="show_balance")],
         ]
     )
 
 
 def watch_button() -> InlineKeyboardMarkup:
+    """Either a Mini App launch button (when WEBAPP_URL is set) or a callback fallback."""
+    if settings.webapp_url:
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="▶️ Buka Mini App & Tonton",
+                        web_app=WebAppInfo(url=settings.webapp_url),
+                    )
+                ],
+            ]
+        )
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="▶️ Mulai Tonton Iklan", callback_data="watch_ad")],

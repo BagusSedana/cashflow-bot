@@ -27,6 +27,7 @@ def welcome(first_name: str | None) -> str:
 
 
 MENU_BUTTON_EARN = "🎬 Tonton Iklan"
+MENU_BUTTON_DAILY = "🎁 Bonus Harian"
 MENU_BUTTON_TASKS = "📋 Tugas Berbayar"
 MENU_BUTTON_BALANCE = "💰 Saldo Saya"
 MENU_BUTTON_REFERRAL = "👥 Ajak Teman"

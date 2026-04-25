@@ -42,6 +42,19 @@ class Settings(BaseSettings):
     payout_methods_raw: str = Field(
         default="DANA,GoPay,OVO,BANK", alias="PAYOUT_METHODS"
     )
+    withdraw_cooldown_seconds: int = Field(
+        default=3600, alias="WITHDRAW_COOLDOWN_SECONDS"
+    )
+
+    # Daily check-in
+    daily_bonus_min: int = Field(default=100, alias="DAILY_BONUS_MIN")
+    daily_bonus_max: int = Field(default=300, alias="DAILY_BONUS_MAX")
+
+    # Mini App / Adsgram (v0.2 — real ads)
+    webapp_url: str = Field(default="", alias="WEBAPP_URL")
+    webapp_host: str = Field(default="0.0.0.0", alias="WEBAPP_HOST")
+    webapp_port: int = Field(default=8080, alias="WEBAPP_PORT")
+    adsgram_block_id: str = Field(default="", alias="ADSGRAM_BLOCK_ID")
 
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 

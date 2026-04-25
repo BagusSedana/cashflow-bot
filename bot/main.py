@@ -14,6 +14,7 @@ from .config import settings
 from .db import init_db
 from .handlers import admin, earn, menu, start, withdraw
 from .middlewares.banned import BannedUserMiddleware
+from .webapp_server import start_webapp
 
 
 def configure_logging() -> None:
@@ -54,9 +55,12 @@ async def main() -> None:
     me = await bot.get_me()
     log.info("Bot started: @%s (id=%s) brand=%s", me.username, me.id, settings.brand_name)
 
+    runner = await start_webapp()
+
     try:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
+        await runner.cleanup()
         await bot.session.close()
 
 

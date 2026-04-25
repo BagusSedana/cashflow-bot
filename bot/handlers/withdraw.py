@@ -1,5 +1,7 @@
-"""Withdraw flow using FSM (amount → method → account → name → confirm)."""
+"""Withdraw flow using FSM (amount → method → account → name → captcha → confirm)."""
 from __future__ import annotations
+
+import random
 
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, StateFilter
@@ -11,7 +13,11 @@ from .. import keyboards, texts
 from ..config import settings
 from ..db import SessionLocal
 from ..services.user_service import get_user_by_id, get_user_by_telegram_id
-from ..services.withdraw_service import WithdrawError, create_request
+from ..services.withdraw_service import (
+    WithdrawError,
+    create_request,
+    seconds_since_last_request,
+)
 
 router = Router(name="withdraw")
 
@@ -21,7 +27,14 @@ class WithdrawStates(StatesGroup):
     method = State()
     account = State()
     name = State()
+    captcha = State()
     confirm = State()
+
+
+def _new_captcha() -> tuple[str, int]:
+    a = random.randint(2, 9)
+    b = random.randint(2, 9)
+    return f"{a} + {b}", a + b
 
 
 @router.message(F.text == texts.MENU_BUTTON_WITHDRAW)
@@ -41,6 +54,16 @@ async def on_withdraw_start(message: Message, state: FSMContext) -> None:
                 )
             )
             return
+        cooldown = settings.withdraw_cooldown_seconds
+        if cooldown > 0:
+            elapsed = await seconds_since_last_request(session, user.id)
+            if elapsed is not None and elapsed < cooldown:
+                wait_minutes = max(1, (cooldown - elapsed) // 60)
+                await message.answer(
+                    f"⏳ Kamu sudah punya request withdraw baru-baru ini.\n"
+                    f"Coba lagi dalam ~{wait_minutes} menit."
+                )
+                return
         balance = user.balance
 
     await state.set_state(WithdrawStates.amount)
@@ -139,7 +162,28 @@ async def on_name(message: Message, state: FSMContext) -> None:
         await message.answer("Nama tidak valid. Coba lagi:")
         return
     await state.update_data(account_name=name)
+
+    question, answer = _new_captcha()
+    await state.update_data(captcha_answer=answer)
+    await state.set_state(WithdrawStates.captcha)
+    await message.answer(
+        f"🤖 Verifikasi anti-bot. Berapa hasil <b>{question}</b>?\n"
+        "Ketik angka jawabannya:"
+    )
+
+
+@router.message(WithdrawStates.captcha)
+async def on_captcha(message: Message, state: FSMContext) -> None:
+    raw = (message.text or "").strip()
     data = await state.get_data()
+    expected = int(data.get("captcha_answer", -1))
+    if not raw.isdigit() or int(raw) != expected:
+        question, answer = _new_captcha()
+        await state.update_data(captcha_answer=answer)
+        await message.answer(
+            f"❌ Salah. Coba lagi. Berapa hasil <b>{question}</b>?"
+        )
+        return
 
     await state.set_state(WithdrawStates.confirm)
     await message.answer(
