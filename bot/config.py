@@ -7,7 +7,7 @@ list-typed fields, which would reject simple values like ``DANA,GoPay,OVO``.
 """
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,7 +53,10 @@ class Settings(BaseSettings):
     # Mini App / Adsgram (v0.2 — real ads)
     webapp_url: str = Field(default="", alias="WEBAPP_URL")
     webapp_host: str = Field(default="0.0.0.0", alias="WEBAPP_HOST")
-    webapp_port: int = Field(default=8080, alias="WEBAPP_PORT")
+    webapp_port: int = Field(
+        default=8080,
+        validation_alias=AliasChoices("WEBAPP_PORT", "PORT"),
+    )
     adsgram_block_id: str = Field(default="", alias="ADSGRAM_BLOCK_ID")
 
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
