@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Bot Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+      <div class="login-card">
+        <h1>🤖 AI Bot Admin</h1>
+        <p>Sign in to manage your bot</p>
+        <form id="login-form">
+          <input type="text" id="username" placeholder="Username" required>
+          <input type="password" id="password" placeholder="Password" required>
+          <button type="submit">Sign In</button>
+        </form>
+        <p id="login-error" class="error" style="display:none"></p>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" style="display:none">
+      <header>
+        <div class="header-left">
+          <h1>🤖 AI Bot Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <button onclick="refreshData()" class="btn-refresh">🔄 Refresh</button>
+          <button onclick="logout()" class="btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <span class="stat-value" id="total-users">0</span>
+            <span class="stat-label">Total Users</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-info">
+            <span class="stat-value" id="premium-users">0</span>
+            <span class="stat-label">Premium Users</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <span class="stat-value" id="active-today">0</span>
+            <span class="stat-label">Active Today</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔢</div>
+          <div class="stat-info">
+            <span class="stat-value" id="total-requests">0</span>
+            <span class="stat-label">Total Requests</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🪙</div>
+          <div class="stat-info">
+            <span class="stat-value" id="total-tokens">0</span>
+            <span class="stat-label">Tokens Used</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <span class="stat-value" id="total-cost">$0.00</span>
+            <span class="stat-label">Est. Cost</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('users')">👥 Users</button>
+        <button class="tab" onclick="showTab('usage')">📊 Usage by Feature</button>
+      </div>
+
+      <!-- Users Table -->
+      <div id="tab-users" class="tab-content active">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Telegram ID</th>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Language</th>
+                <th>Type</th>
+                <th>Requests</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr><td colspan="8" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Usage Tab -->
+      <div id="tab-usage" class="tab-content">
+        <div class="usage-grid" id="usage-grid">
+          <p class="loading">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>
