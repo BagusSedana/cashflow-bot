@@ -1,0 +1,21 @@
+[project]
+name = "cashflow-bot"
+version = "0.1.0"
+description = "Bot Telegram earn-money jujur (ads + offerwall + referral)"
+requires-python = ">=3.11"
+dependencies = [
+    "aiogram==3.13.1",
+    "sqlalchemy==2.0.36",
+    "aiosqlite==0.20.0",
+    "asyncpg==0.30.0",
+    "pydantic-settings==2.6.1",
+    "python-dotenv==1.0.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]

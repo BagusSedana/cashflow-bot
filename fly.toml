@@ -1,0 +1,21 @@
+# Fly.io deployment config. Run `fly launch --no-deploy` to set the app name,
+# then `fly secrets set TELEGRAM_BOT_TOKEN=... ADMIN_IDS=...` and `fly deploy`.
+
+app = "cashflow-bot"
+primary_region = "sin"   # Singapore — terdekat dari Indonesia
+
+[build]
+  dockerfile = "Dockerfile"
+
+[mounts]
+  source = "cashflow_data"
+  destination = "/app/data"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
+
+[env]
+  LOG_LEVEL = "INFO"
+  BRAND_NAME = "CashFlow ID"
